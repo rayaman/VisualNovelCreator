@@ -1,0 +1,135 @@
+-- When using seperate files to hold data you should have a convention for identification purposes
+[BEDROOM]{
+	cls()
+	SAVE()
+	wenttobedroom=setVar(true)
+	"You take a look around your room, and can't help but notice the amount of mess in it"<
+		"Examine Desk" JUMPPLAY(Bedroom_DESK,select)
+		"Examine Bed" JUMPPLAY(Bedroom_BED,select)
+		"Examine Closet" JUMPPLAY(Bedroom_CLOSET,select)
+		"Examine Clock" JUMPPLAY(Bedroom_CLOCK,select)
+		"Examine Trash" JUMPPLAY(Bedroom_TRASH,select)
+		"Examine Door" JUMPPLAY(Bedroom_DOOR,select)
+	>
+}
+[Bedroom_DESK]{
+	COMPARE(=,bedroom_lookedatdesk,true,Bedroom_DESK2,Bedroom_DESK1)
+}
+[Bedroom_DESK1]{
+	bedroom_lookedatdesk=setVar(true)
+	"My lovely desk, it has my homework and a pile of papers on it"
+	"I really should clean my desk up a bit"
+	playSong(paper)
+	"..."
+	"There we go, nice and clean now"
+	"I guess I'll hold on to these pieces of paper for now"
+	JUMP(BEDROOM)
+}
+[Bedroom_DESK2]{
+	"MY desk sure looks a lot better without all of that paper scattered around it"
+	JUMP(BEDROOM)
+}
+[Bedroom_BED]{
+	COMPARE(=,bedroom_lookedatbed,true,Bedroom_BED1,__STAY)
+	bedroom_lookedatbed=setVar(true)
+	COMPARE(=,bedroom_lookedatclock,true,Bedroom_BED2,__STAY)
+	"Ah my bed, if it weren't for mom I would be sleeping right now"
+	"I remember back when I was younger I used to jump on my bed"
+	playSong(bed)
+	"haha this is fun"
+	playSong(laugh)
+	"Okay, I think I am done for now"
+	JUMP(BEDROOM)
+}
+[Bedroom_BED1]{
+	playSong(laugh)
+	"I had enough, let me look around the room more"
+	JUMP(BEDROOM)
+}
+[Bedroom_BED2]{
+	"I remember back when I was younger I used to jump on my bed"
+	playSong(bed)
+	"haha this is fun"
+	playSong(laugh)
+	"Okay, I think I am done for now"
+	JUMP(BEDROOM)
+}
+[Bedroom_CLOSET]{
+	COMPARE(=,bedroom_lookedatcloset,true,Bedroom_CLOSET1,__STAY)
+	bedroom_lookedatcloset=setVar(true)
+	"Look at all these clothes"
+	"Hmm..."
+	playSong(paper)
+	"Hey, what do you know 15 dollars!"
+	money=ADD(money,15)
+	"I now have $money$ dollars"
+	JUMP(BEDROOM)
+}
+[Bedroom_CLOSET1]{
+	"Nothing interesting left in here"
+	JUMP(BEDROOM)
+}
+[Bedroom_CLOCK]{
+	COMPARE(=,bedroom_lookedatclock,true,Bedroom_CLOCK1,__STAY)
+	bedroom_lookedatclock=setVar(true)
+	playSong(alarm)
+	playSong(laugh)
+	"Ahhh... my alarm wasn't expecting that!"
+	"Looks like it is 9AM I should start hurrying"
+	COMPARE(=,bedroom_lookedatbed,true,__STAY,BEDROOM)
+	playSong(laugh)
+	"I guess even though my mom called me, my alarm would have woken me up anyway"
+}
+[Bedroom_CLOCK1]{
+	"It's still morning, but I should probably get going"
+	JUMP(BEDROOM)
+}
+[Bedroom_TRASH]{
+	COMPARE(=,bedroom_lookedattrash,true,Bedroom_TRASH2,Bedroom_TRASH1)
+}
+[Bedroom_TRASH1]{
+	"An empty garbage can..."
+	"I kinda want to put something in it..."
+	COMPARE(=,bedroom_lookedatdesk,true,__STAY,BEDROOM_REDIRECT_TRASH)
+	bedroom_lookedattrash=setVar(true)
+	bedroom_trashcounter=setVar(1,"n")
+	"Alright, I'll throw away some of these pieces of paper I found on my desk"
+	playSong(paper)
+	playSong(laugh)
+	"I feel like an all-star"
+	JUMP(BEDROOM)
+}
+[BEDROOM_REDIRECT_TRASH]{
+	playSong(sigh)
+	"All well, I don't have anything I can put into it"
+	JUMP(BEDROOM)
+}
+[Bedroom_TRASH2]{
+	"Another shot for the all-star"
+	playSong(paper)
+	playSong(laugh)
+	bedroom_trashcounter=ADD(bedroom_trashcounter,1)
+	"I think I threw in $bedroom_trashcounter$ pieces already, and I didn't even miss a shot, a new record!"
+	JUMP(BEDROOM)
+}
+[Bedroom_DOOR]{
+	COMPARE(=,bedroom_lookedatdoor,true,Bedroom_DOOR2,Bedroom_DOOR1)
+}
+[Bedroom_DOOR1]{
+	bedroom_lookedatdoor=setVar(true)
+	"This is like the nicest wooden door I have ever seen!"
+	"The wood is so sturdy and it has that solid feel"
+	"You know that feel when you knock on it and it doesn't feel like it will break from your knock"
+	playSong(laugh)
+	"Okay, I should stop rambling..."
+	"Am I ready to go down stairs?"<
+		"Yeah, I looked around enough" JUMPPLAY(LIVINGROOM,select)
+		"Hmm... Maybe I should take a second look around..." JUMPPLAY(BEDROOM,select)
+	>
+}
+[Bedroom_DOOR2]{
+	"Am I ready to go down stairs?"<
+		"Yeah, I looked around enough" JUMPPLAY(LIVINGROOM,select)
+		"Hmm... Maybe I should take a second look around..." JUMPPLAY(BEDROOM,select)
+	>
+}

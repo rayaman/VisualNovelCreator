@@ -1,0 +1,221 @@
+LOAD adventures/home.dat
+[STORE]{
+	cls()
+	playSong(footsteps)
+	COMPARE(=,Store_StartedMenu,true,__SKIP+7,__STAY)
+	grab=setVar("first")
+	SAVE()
+	Store_StartedMenu=setVar(true)
+	store=loadSong("Audio/store.ogg")
+	stopSong()
+	playSongLooped(store)
+	"Alright, I am at the store..."
+	"Let's take a look at this list"
+	playSong(paper)
+	"What should I grab $grab$?"<
+		"Milk" JUMPPLAY(Store_Milk,footsteps)
+		"Eggs" JUMPPLAY(Store_Eggs,footsteps)
+		"Bread" JUMPPLAY(Store_Bread,footsteps)
+		"Butter" JUMPPLAY(Store_Butter,footsteps)
+		"Orange and Apple Juice" JUMPPLAY(Store_OJAJ,footsteps)
+		"Frozen Pizzas" JUMPPLAY(Store_Frozen,footsteps)
+		"Sussages" JUMPPLAY(Store_Sussages,footsteps)
+		"Go to checkout" JUMPPLAY(Store_CheckOut,footsteps)
+	>
+}
+[Store_CheckOut]{
+	Store_cost=setVar(0,"n")
+	COMPARE(=,Store_GotMilk,true,__STAY,__SKIP+2)
+	Store_cost=ADD(Store_cost,1.75)
+	"Ok $Store_cost$ for the Milk"
+	COMPARE(=,Store_GotEggs,true,__STAY,__SKIP+2)
+	Store_cost=ADD(Store_cost,4.50)
+	"$Store_cost$ with the Eggs"
+	COMPARE(=,Store_GotBread,true,__STAY,__SKIP+2)
+	Store_cost=ADD(Store_cost,2.75)
+	"$Store_cost$ with the Bread"
+	COMPARE(=,Store_GotButter,true,__STAY,__SKIP+2)
+	Store_cost=ADD(Store_cost,2.99)
+	"$Store_cost$ with the Butter"
+	COMPARE(=,Store_GotOJAJ,true,__STAY,__SKIP+2)
+	Store_cost=ADD(Store_cost,5.50)
+	"$Store_cost$ with the Juices"
+	COMPARE(=,Store_GotSussages,true,__STAY,__SKIP+2)
+	Store_cost=ADD(Store_cost,2.00)
+	"$Store_cost$ with the sussages"
+	COMPARE(=,Store_GotPizzas,true,__STAY,__SKIP+16)
+	Store_cost=ADD(Store_cost,1.75)
+	"$Store_cost$ with the frozen pizzas"
+	COMPARE(=,metRick,true,__STAY,__SKIP+13)
+	"Rick: Look who's at the checkout line..."
+	playSong(hmm)
+	"Rick: And what do we have here? Are those frozen pizzas?"
+	"$name$: ..."
+	playSong(hmm)
+	"Rick: What happened to I didn't know?"
+	"$name$: At the time I had no idea where they were..."
+	ricksaw=setVar(true)
+	"Rick: I see how it is..."
+	playSong(footsteps)
+	"$name$: I don't know why, but I get a really bad feeling from him..."
+	playSong(sigh)
+	"$name$: Well, I'll worry about that later"
+	COMPARE(=,Store_cost,0,Store_NoItems,__STAY)
+	"Store Clerk: Alright, looks like you owe me $Store_cost$ dollars for your items"
+	COMPARE(>,money,Store_cost,__STAY,__SKIP+5)
+	couldpay=setVar(true)
+	"$name$: Here you go..."
+	"Store Clerk: Thanks, have a good day"
+	money=SUB(money,Store_cost)
+	JUMP(HOME)
+	"$name$: Crap, I don't have the money on me..."
+	"Store Clerk: Well I guess you won't be leaving with any items then"
+	JUMP(HOME)
+}
+[Store_NoItems]{
+	playSong(hmm)
+	"What am I doing?"
+	"I didn't even buy anything"
+	"Should I really leave the store without buying anything?"<
+		"Yes" JUMPPLAY(__STAY,footsteps)
+		"No" JUMPPLAY(STORE,select)
+	>
+	Store_BoughtNone=true
+	JUMP(HOME)
+}
+[STOREROUTER]{
+	grab=setVar("next")
+	JUMP(STORE)
+}
+[Store_Milk]{
+	COMPARE(=,Store_GotMilk,true,__SKIP+8,__STAY)
+	Store_GotMilk=setVar(true)
+	"Hmm.. Where is the milk?"
+	playSong("footsteps")
+	"Maybe it's over here..."
+	playSong(laugh)
+	"Ah here it is, I wonder why it took so long..."
+	"On to the next item"
+	JUMP(STOREROUTER)
+	"I already grabbed the milk!"
+	JUMP(STOREROUTER)
+}
+[Store_Eggs]{
+	COMPARE(=,Store_GotEggs,true,__SKIP+14,__STAY)
+	Store_GotEggs=setVar(true)
+	COMPARE(=,Store_GotMilk,true,__STAY,__SKIP+3)
+	"Now... I think the eggs should be close to the milk"
+	playSong(footsteps)
+	"Weird, I don't see them"
+	COMPARE(=,Store_GotButter,true,__STAY,__SKIP+3)
+	"Wait! I think I saw them near the butter"
+	playSong(laugh)
+	"I feel dumb now"
+	playSong(footsteps)
+	"Here the eggs are!"
+	playSong(sigh)
+	"I walked over the entire store looking for these"
+	JUMP(STOREROUTER)
+	"I already grabbed the Eggs"
+	JUMP(STOREROUTER)
+}
+[Store_Bread]{
+	COMPARE(=,Store_GotBread,true,__SKIP+31,__STAY)
+	Store_GotBread=setVar(true)
+	scared=loadSong("Audio/twisted.ogg")
+	"Now for the bread..."
+	playSong(footsteps)
+	"Here we g..."
+	playSongLooped(scared,.4)
+	playSong(hmm)
+	metRick=setVar(true)
+	"Who's that?"
+	"Unknown Man: Hello there little boy!?"
+	"$name$: Umm... hi... Who are you?"
+	"Rick: You can call me Rick!"
+	"$name$: So... Rick what do you want?"
+	"Rick: Oh, I want to ask you if you knew where the Frozen Pizzas are?"
+	COMPARE(=,Store_GotPizzas,true,__STAY,Store_Idk)
+	"$name$: Yeah, I know where they are..."
+	playSong(footsteps)
+	"Rick: Thanks a lot sonny..."
+	"$name$: Yeah don't mention it"
+	"Rick: Can you do me one more favor?"
+	playSong(sigh)
+	"$name$: Sure what is it?"
+	"Rick: DIE!"
+	playSong(boyknife)
+	sleep(1.5)
+	fadeSong(scared)
+	stopSong()
+	playSong(over)
+	UNSAVE()
+	sleep(3)
+	JUMP(CONFIG)
+	"I already got the bread! I meet a creepy man named Rick over here... I should get out of here!"
+	JUMP(STOREROUTER)
+}
+[Store_Idk]{
+	"$name$: I am sorry, but I don't know..."
+	playSong(sigh)
+	"Rick: Alright then, I guess I will have to find them myself..."
+	playSong(footsteps)
+	fadeSong(scared)
+	stopSong()
+	stopSong(store)
+	playSongLooped(store,1)
+	sleep(.5)
+	playSong(laugh)
+	"That was weird... Well at least I got the bread"
+	"That was one strange man though..."
+	JUMP(STOREROUTER)
+}
+[Store_Butter]{
+	COMPARE(=,Store_GotButter,true,__SKIP+5,__STAY)
+	Store_GotButter=setVar(true)
+	"Great I found the butter"
+	"This is going smoother than I thought"
+	"This is great, I'll be home in no time"
+	JUMP(STOREROUTER)
+	"I already grabbed the Butter!"
+	JUMP(STOREROUTER)
+}
+[Store_OJAJ]{
+	COMPARE(=,Store_GotOJAJ,true,__SKIP+5,__STAY)
+	Store_GotOJAJ=setVar(true)
+	"Here they are..."
+	"The orange and apple juice, right next to each other"
+	"This makes it all the better"
+	JUMP(STOREROUTER)
+	"I already grabbed the Juices!"
+	JUMP(STOREROUTER)
+}
+[Store_Frozen]{
+	COMPARE(=,Store_GotPizzas,true,__SKIP+14,__STAY)
+	Store_GotPizzas=setVar(true)
+	"Ok looks like I found the pizzas"
+	"They are right by the Sussages"
+	COMPARE(=,Store_GotSussages,true,__SKIP+5,__STAY)
+	Store_GotSussages=setVar(true)
+	"Might as well pick them up while I am at it"
+	playSong(footsteps)
+	"Now that we got these lets see if I forgot anything else"
+	JUMP(STOREROUTER)
+	playSong(laugh)
+	"I picked up the Sussages already"
+	playSong(sigh)
+	"If I were paying attention before I would have grabbed the pizzas as well"
+	JUMP(STOREROUTER)
+	"I already got the Frozen Pizzas!"
+	JUMP(STOREROUTER)
+}
+[Store_Sussages]{
+	COMPARE(=,Store_GotSussages,true,__SKIP+5,__STAY)
+	Store_GotSussages=setVar(true)
+	"Oooh the Sussages are right here in the Freezer aisle"
+	playSong(laugh)
+	"Well that makes sense"
+	JUMP(STOREROUTER)
+	"I already grabbed the Sussages!"
+	JUMP(STOREROUTER)
+}

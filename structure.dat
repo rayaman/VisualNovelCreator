@@ -1,0 +1,233 @@
+ENABLE forseeLabels -- allows you to jump to labels in other blocks if omitted what i am doing right now is impossible
+[Functions]{--Allows choices to continue where they left off
+	::FUNCTION::
+	"We are now in the function"
+	"We can run tests using the relitiave __SKIP# handle set variables and do some things"
+	COMPARE(=,name,Ryan,__STAY,__SKIP+2)
+	"Name already set"
+	GOTO(__LASTGOTO)
+	name="Ryan" -- new update allows for setting variables like this
+	"Name is now set"
+	GOTO(__LASTGOTO)
+}
+[START_]{
+	"Lets call a method that proccesses stuff for us than returns to the position we want"
+	"Look at variable name: $name$"
+	GOTO(FUNCTION) -- __LASTGOTO that the goto in the other block refers to
+	"Now out of the function"
+	"Look at variable name now: $name$"
+	"Now the next line will call the method again"
+	GOTO(FUNCTION) -- the new __LASTGOTO
+	"Here"
+	"Note when doing GOTO(__LASTGOTO) the previous __LASTGOTO is not changed!!!"
+	-- Note: Labels are saved when using the save method as well!!!
+	"Which means a loop can be made by doing GOTO(__LASTGOTO)"
+	GOTO(__LASTGOTO)
+}
+[CONFIG]{
+	SAVE("tests.sav")
+	money=10
+	num=math.sqrt(100)+15
+	"$num$"
+	"$a$"
+	EXIT() -- forces an exit out of the code
+	COMPARE(=,num,30,-here-,__STAY) -- __LASTGOTO also applies to here as well when using <labels>
+	"$num$ not equal 30"
+	"test2"
+}
+[UNNAMEDBLOCK]{
+	::here::
+	"It is equal"
+	GOTO(__LASTGOTO)
+}
+[LOOP]{
+	count=0
+	::loop::
+		count=count+1
+		"Loop# $count$ | $list$" -- Note if JUMP(-end-) of GOTO(end) is called here, then it will goto the ::end:: closest. 
+		--[[ The search order is as follows 
+			1. Check if label is __LASTGOTO
+			2. Check if label is within current block
+			3. Check for labels that were already seen
+			4. Search other blocks for labels]]
+		GOTO(-loop-)
+	::end::
+	"You wont reach me lol"
+}
+[THREAD]{
+	--vals=vals+1
+	--"Value of vals: $vals$"
+	setText(disp,vals)
+	sleep(1)
+	"1"<
+		"2" JUMP(T1)
+		"3" JUMP(T2)
+		"4" JUMP(T3)
+	>
+}
+[T1]{
+	vals="test1"
+	JUMP(THREAD)
+}
+[T2]{
+	vals="test2"
+	JUMP(THREAD)
+}
+[T3]{
+	vals="test3"
+	JUMP(THREAD)
+}
+
+[FORLOOP]{
+	count=0 -- you got to initlize variables before use
+	::forloop::-- this can eaisly be adapted into a while loop by messing with the COMPARE method 
+		COMPARE(>=,count,10,-end-,__STAY)
+		count=count+1
+		"Loop# $count$"
+		GOTO(forloop)
+	::end::
+	"Out of for loop"
+	"Note if JUMP cannot find a block it will look for a label! if a block and label have the same name then do JUMP(-labelname-) instead of JUMP(labelname)"
+	"Choice Test"<
+		"test1 (inf loop)" JUMP(-loop-) -- label and block in this case have different names, so no need to do -labelname- I did it any way lol
+		"test 2 (forloop)" JUMP(FORLOOP) -- block
+		"test 3 (new syntax)" JUMP(SYNTAX)
+	>
+}
+[SYNTAX]{
+	-- lets try doing lists!
+	num=0 -- set num to 0
+	ind=2
+	ind1=1
+	list=["Ryan","Mary","Amy","Bob","Billy",num] -- a list :) NOTE: list's indexces start at 1 not 0!!!
+	--lets play with these a bit
+	SEED()
+	"Element 1 in list is: $list[1]$" -- display the first element in the list
+	"Random name1: $list$" -- if the object is a list and you want a random element do the same as normal varables
+	"Random name2: $list$" -- if the object is a list and you want a random element do the same as normal varables
+	"Random name3: $list$" -- if the object is a list and you want a random element do the same as normal varables
+	"Last element in list is $list[-1]$" -- the last element on the list
+	--using lists outside of text streams
+	elem1=list[ind1] -- varables can be used here as well
+	"$elem1$"
+	lastelem=list[-1]
+	"$lastelem$"
+	"Elem2: $list[ind]$" -- variables can also be used here as well, ind is equal to 2
+	delElem(list,2)-- deletes the first element of the list, list
+	"Elem2: $list[2]$"
+	addElem(list,"CANDY!!!",2) -- adds an element to list at position i. i is optional!
+	"Elem2: $list[2]$"
+	count=0
+	test=RANDOM()
+	len=getLength(list)
+	"Length: $len$"
+	"Choice Test"<
+		"test 1 (loop test)" JUMP(-loop-) -- label and block in this case have different names, so no need to do -labelname- I did it any way lol
+		"test 2 ($test$)" JUMP(FORLOOP) -- block
+		"test 3 (new syntax)" JUMP(SYNTAX)
+	>
+}
+[TRUE]{
+	"true"
+	"Choice Test"<
+		"test 1 (loop test)" JUMP(SAYHI) -- label and block in this case have different names, so no need to do -labelname- I did it any way lol
+		"test 2 ($test$)" JUMP(SAYBYE) -- block
+		"test 3 (new syntax)" JUMP(SYNTAX)
+	>
+}
+[FALSE]{
+	"false"
+	"Choice Test"<
+		"test 1 (loop test)" JUMP(-loop-) -- label and block in this case have different names, so no need to do -labelname- I did it any way lol
+		"test 2 ($test$)" JUMP(FORLOOP) -- block
+		"test 3 (new syntax)" JUMP(SYNTAX)
+	>
+}
+[SAYHI]{
+	"HI!!!"
+	JUMP(SAYBYE)
+}
+[SAYBYE]{
+	"BYE!!!"
+	EXIT()
+}
+[CONDITIONS]{
+	"Lets play with BG"
+	"Lets Go!"
+	BG("fire.jpg")
+	"Great that works, now for Objects!"
+	test=__workspace:newItem("","fire.jpg","",0,0,300,200)
+	"Now lets play around with the actor a bit"
+	test:setText("Hello!")
+	"Now lets make it have an image too"
+	"Lets make it draggable"
+	makeDraggable(test,"l")
+	"Lets play with animations!"
+	"First we create an animation object..."
+	"Boom!"	
+	anim=createAnimation("loading",.05,0,0,300,300)
+	"Lets Center the object!"
+	centerXY(anim)
+	"Now for audio!"
+	test=loadAudio("test.mp3")
+	"It's loaded! Lets play it!"
+	playAudio(test)
+	"Testing direct method calling... (We are pausing the animation dont worry it did not freeze :P)"
+	anim:Pause() -- added interface to directly call methods on objects Woot!!!
+	"Did it pause?"
+	"Now we may want to stop the audio..."
+	"Done"
+	stopAudio(test)
+	"lets Resume the anim"
+	anim:Resume()
+	"Lets experiment with conditions: if var1==var2 and var3!=var4 or 4<5 then MethodTrue|MethodFalse"
+	"Lets set name to Ryan"
+	name="Ryan"
+	"name is now $name$"
+	if name=="Ryan" and name!="bob" then JUMP(TRUE)|JUMP(FALSE)
+}
+[CODE:function()]{
+	"Within a method"
+	test=15 -- lets set a variable here
+	"Does this block"
+	"Now time to nest"
+	TESTFunc()
+	"Then when we are done"
+	"We go back to where we were called :)"
+}
+[TESTFunc:function()]{
+	"testing nested function calls"
+}
+[CODE2:function(button,self)]{
+	"Called in a thread"
+	"$button$ mouse button pressed!"
+}
+[COLORThread]{
+	r=RANDOM(255)
+	b=RANDOM(255)
+	g=RANDOM(255)
+	item:setColor(r,b,g)
+	sleep(1)
+	JUMP(COLORThread)
+}
+[DIRECT]{ -- this is a test of direct method calling of objects
+	BG("fire.jpg")
+	test=loadAudio("test.mp3")
+	playAudio(test)
+	"steps?"
+	item=__workspace:newTextLabel("Hello",0,0,100,30)
+	"Is there an item?"
+	"Lets change the text"
+	item:setText("Hello2")
+	"Lets change colors"
+	item:setColor(23,56,132)
+	"Lets test inhretance"
+	newThread(COLORThread)
+	item2=item:newTextButton("X",0,0,20,20)
+	item2:OnReleased(CODE2)
+	"Did it work?"
+	"Lets call a custom method!"
+	--CODE() -- the block CODE can now be called as a method
+	"What happened: $test$"
+	"And with that it works"
+}

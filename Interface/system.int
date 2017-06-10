@@ -1,0 +1,77 @@
+function gui:addTip(tip,n,padding)
+	local font=love.graphics.getFont()
+	self.t=gui:newTextLabel(tip,"Tooltip",0,0,font:getWidth(tip)+(padding or 4),14)
+	self.t:setNewFont(10)
+	self.t.Visible=false
+	self.t.Tween=1
+	self.t.Color=Color.tan
+	self.alarm=multi:newAlarm(0)
+	self.alarm:Pause()
+	self.alarm.parent=self
+	self.time=n or 2
+	self.padding=padding or 4
+	self.alarm:OnRing(function(alarm)
+		alarm.parent.t:SetDualDim(love.mouse.getX()-2,love.mouse.getY()-2)
+		alarm.parent.t.Visible=true
+		alarm.parent.t:addDominance()
+	end)
+	self:OnEnter(function(self)
+		self.Visibility=.5
+		self.alarm:Reset(self.time)
+	end)
+	self:OnExit(function(self)
+		self.alarm:Pause()
+		self.Visibility=0
+	end)
+	self.t:OnExit(function(self)
+		self.Visible=false
+		self:removeDominance()
+	end)
+end
+function gui:newWindow(name)
+	local win=self:newFrame(0,0,400,20)
+	win.Draggable=true
+	win.dragbut="r"
+	win:OnDragStart(function(self)
+		self:TopStack()
+	end)
+	if name then
+		local font=love.graphics.getFont()
+		win.title=win:newTextLabel(name,0,0,font:getWidth(name),20)
+		win.title.TextFormat="left"
+		win.title.Visibility=0
+		win.title.XTween=3
+		win.title.Tween=-3
+	end
+	win:ApplyGradient({Color.white,Color.light_blue,Color.blue,trans=200})
+	win.close=win:newImageButton("icons/cancel.png",-20,2,16,16,1)
+	win.close:OnEnter(function(self)
+		self.Parent:removeDominance()
+		self:addDominance()
+	end)
+	win.close:OnReleased(function(b,self)
+		self.Parent:Destroy()
+		self:removeDominance()
+		love.mouse.setCursor()
+	end)
+	win.close:OnExit(function(self)
+		self:removeDominance()
+	end)
+	win.holder=win:newFrame(0,0,0,280,0,1,1)
+	win:OnUpdate(function(self)
+		if self.y<40 then self:SetDualDim(nil,0) love.mouse.setY(50) end
+	end)
+	win:OnEnter(function(self)
+		self:addDominance()
+	end)
+	win:OnExit(function(self)
+		self:removeDominance()
+	end)
+	win.holder:OnEnter(function(self)
+		self:addDominance()
+	end)
+	win.holder:OnExit(function(self)
+		self:removeDominance()
+	end)
+	return win.holder,win
+end

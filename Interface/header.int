@@ -1,0 +1,81 @@
+function gui:newHeader()
+	local header=self:newFrame(0,0,0,20,0,0,1)
+	header:ApplyGradient({Color.white,Color.light_blue,Color.blue,trans=200})
+	header.last={x=0,width=0}
+	function header:newTab(name)
+		local font=love.graphics.getFont()
+		local tab=self:newTextButton(name,self.last.x+self.last.width,0,font:getWidth(name)+6,20)
+		self.last=tab
+		tab.Visibility=0
+		tab.Tween=-3
+		tab.XTween=-2
+		tab.Color=Color.white
+		tab.largest={x=0,width=0}
+		tab.Options=tab:newFrame("Options",0,20)
+		tab.Options.Visible=false
+		tab.Options.Color=Color.light_gray
+		tab:OnEnter(function(self)
+			self.Visibility=.5
+		end)
+		tab:OnExit(function(self)
+			self.Visibility=0
+		end)
+		tab:OnReleased(function(b,self)
+			if b=="l" then
+				self.Options.Visible=true
+				self:addDominance()
+			end
+		end)
+		tab.Options:OnExit(function(self)
+			self.Visible=false
+			self:removeDominance()
+		end)
+		function tab:newOption(name,func,HK)
+			local opt=self.Options:newTextButton(name,0,#self.Options:getChildren()*20,0,20,0,0,1)
+			if HK then
+				if type(HK)=="table" then
+					for i=1,#HK do
+						opt:addHotKey(HK[i]):OnHotKey(func)
+						name=name.."\t\t\t\t\t\t"
+						local temp=opt:newTextLabel(HK[i],-(font:getWidth(HK[i])+2),0,font:getWidth(HK[i])+2,20,1)
+						temp.Visibility=0
+						temp.Tween=-3
+						temp.XTween=-2
+						opt.text=name
+					end
+				else
+					opt:setHotKey(HK)
+					opt:OnHotKey(func)
+					name=name.."\t\t\t\t\t\t"
+					local temp=opt:newTextLabel(HK,-(font:getWidth(HK)+2),0,font:getWidth(HK)+2,20,1)
+					temp.Visibility=0
+					temp.Tween=-3
+					temp.XTween=-2
+					opt.text=name
+				end
+			end
+			opt.TextFormat="left"
+			opt.Visibility=0
+			opt.Color=Color.white
+			opt.Tween=-3
+			opt:OnEnter(function(self)
+				self.Visibility=.5
+			end)
+			opt:OnExit(function(self)
+				self.Visibility=0
+			end)
+			local font=love.graphics.getFont()
+			local c=self:getChildren()
+			if font:getWidth(name)+6>self.largest.width then
+				self.largest={width=font:getWidth(name)+6}
+			end
+			self.Options:SetDualDim(0,20,self.largest.width,#self.Options:getChildren()*20)
+			if func then
+				opt:OnReleased(func)
+			end
+			return opt
+		end
+		return tab
+	end
+	return header
+end

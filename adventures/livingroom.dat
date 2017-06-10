@@ -1,0 +1,75 @@
+LOAD adventures/store.dat
+[LIVINGROOM]{
+	cls()
+	SAVE()
+	playSong(stairs)
+	"$name$: I am coming down right now"
+	cmd=setVar("Hey")
+	COMPARE(=,wenttobedroom,true,__STAY,Livingroom_Chat)
+	cmd=setVar("Anyway")
+	"Mom: What took you so long?"<
+		"I was upstairs looking around my room" JUMPPLAY(Livingroom_Truth,select)
+		"Tell her a lie" JUMPPLAY(Livingroom_Lie,select)
+	>
+}
+[Livingroom_Truth]{
+	"$name$: I was upstairs looking around my room a bit, I was cleaning a bit and found some cash too"
+	"Mom: Okay... next time when I call you come right away"
+	playSong(laugh)
+	"$name$ Okay mom I promise"
+	momcantrust=setVar(true)
+	SAVE()
+	JUMP(Livingroom_Chat)
+}
+[Livingroom_Lie]{
+	"$name$: As I was going down stairs I heard my clock ring so I went to turn it off"
+	COMPARE(=,bedroom_lookedatclock,true,__STAY,Livingroom_CoughtInLieClock)
+	"Mom: I heard your alarm $name$, thats true"
+	COMPARE(=,bedroom_lookedatbed,true,Livingroom_CoughtInLieBed,__STAY)
+	COMPARE(=,bedroom_lookedatdesk,true,__STAY,Livingroom_Okay)
+	COMPARE(=,bedroom_lookedattrash,true,__STAY,Livingroom_Okay)
+	"Mom: but, what was all that 'All-Star' stuff about huh?"
+	"$name$: Hey I can explain, ok so I wa..."
+	"Mom: I don't want to hear it!"
+	"$name$: but..."
+	playSong(sigh)
+	"Mom: No buts!"
+	JUMP(Livingroom_CoughtInLie)
+}
+[Livingroom_CoughtInLieBed]{
+	"Mom: But what was all that jumping around on your bed for?"
+	"$name$: ..."
+	"Mom: Sometimes I wonder about you, you know that"
+	"$name$: ..."
+	JUMP(Livingroom_CoughtInLie)
+}
+[Livingroom_CoughtInLieClock]{
+	"Mom: I didn't hear a clock mister!"
+	"$name$: Oh... um..."
+	JUMP(Livingroom_CoughtInLie)
+}
+[Livingroom_CoughtInLie]{
+	"Mom: how many times have I told you not to lie to me $name$! I can never trust you to tell me the truth"
+	JUMP(Livingroom_Chat)
+}
+[Livingroom_Okay]{
+	momcantrust=setVar(true)
+	isElusive=setVar(true)
+	"Mom: Alright then got it, no problem"
+	SAVE()
+	JUMP(Livingroom_Chat)
+}
+[Livingroom_Chat]{
+	"Mom: $cmd$, I need you to get some stuff from the store, I am making breakfast and we are out of some stuff."
+	playSong(pots)
+	"Mom: I have a list of things you need to get over there, go get it and bring the stuff back"
+	playSong(paper)
+	"$name$: Alright, I'll get the stuff..."
+	playSong(sigh)
+	"$name$: There is so many things I need to get"
+	"Mom: Well make sure you get them all, or else"
+	"$name$: Alright, I got it.."
+	playSong(footsteps)
+	fadeSong(maintheme)
+	JUMP(STORE)
+}

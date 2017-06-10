@@ -1,0 +1,5 @@
+function gui:newColorPicker(x,y,w)
+	local c=self:newFrame("ColorPicker",x,y,w,w)
+	c.wheel=c:newImageLabel("Resources/wheel.png","Wheel",0,0,w,w)
+	return c
+end
