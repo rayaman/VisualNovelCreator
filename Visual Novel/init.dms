@@ -1,0 +1,6 @@
+ENTRY init
+[init]{
+	"Hi!"
+	"hmm..."
+	"wait!"
+}
