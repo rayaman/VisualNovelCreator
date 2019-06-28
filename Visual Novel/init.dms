@@ -1,6 +1,12 @@
 ENTRY init
 [init]{
-	"Hi!"
+	"Ryan: Hi!"
 	"hmm..."
 	"wait!"
+	"Bob: What are you talking about?"
+	"Ryan: I forget tbh..."
+	"Bob: but you just told me how important this was!"
+	"Ryan: did I? Damn my memory is really bad..."
+	"Bob: maybe you should see a doctor."
+	"Ryan: That might be a good idea..."
 }
