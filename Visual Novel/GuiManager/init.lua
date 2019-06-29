@@ -32,7 +32,7 @@ _GuiPro.rotate=0
 _defaultfont = love.graphics.setNewFont(12)
 setmetatable(_GuiPro, gui)
 function gui:LoadInterface(file)
-	local add=".int"
+	local add=".lua"
 	if string.find(file,".",1,true) then add="" end
 	if love.filesystem.getInfo(file..add) then
     a,b=pcall(love.filesystem.load(file..add))
@@ -49,7 +49,7 @@ end
 function gui.LoadAll(dir)
 	files=love.filesystem.getDirectoryItems(dir)
 	for i=1,#files do
-		if string.sub(files[i],-4)==".int" then
+		if string.sub(files[i],-4)==".lua" then
 			gui:LoadInterface(dir.."/"..files[i])
 		end
 	end

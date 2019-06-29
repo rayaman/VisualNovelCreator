@@ -54,14 +54,22 @@ function gui:drawR()
 			love.graphics.rectangle("line", self.x-(b/2), self.y-(b/2), self.width+b, self.height+b,(self.rx or 1)*self.DPI,(self.ry or 1)*self.DPI,(self.segments or 1)*self.DPI)
 		end
 		if string.find(self.Type, "Text") then
-			if self.text~=nil and self.TextFormat ~= "center" then
-				love.graphics.setColor(self.TextColor[1],self.TextColor[2],self.TextColor[3],self.TextVisibility)
-				love.graphics.setFont(self.Font)
-				love.graphics.printf(self.text, self.x, self.y, self.width, self.TextFormat,self.TextRotaion)
-			elseif self.text~=nil and self.TextFormat == "center" then
+			if self.text~=nil and self.TextFormat == "center" then
 				love.graphics.setColor(self.TextColor[1],self.TextColor[2],self.TextColor[3],self.TextVisibility)
 				love.graphics.setFont(self.Font)
 				love.graphics.printf(self.text, self.x+(self.width-self.Font:getWidth(self.text))/2, self.y+(self.height-self.Font:getHeight())/2, self.width, "left",self.TextRotaion)
+			elseif self.text~=nil and self.TextFormat == "middleleft" then
+				love.graphics.setColor(self.TextColor[1],self.TextColor[2],self.TextColor[3],self.TextVisibility)
+				love.graphics.setFont(self.Font)
+				love.graphics.printf(self.text, self.x + (self.XTween or 0), self.y+(self.height-self.Font:getHeight())/2, self.width, "left",self.TextRotaion)
+			elseif self.text~=nil and self.TextFormat == "middleright" then
+				love.graphics.setColor(self.TextColor[1],self.TextColor[2],self.TextColor[3],self.TextVisibility)
+				love.graphics.setFont(self.Font)
+				love.graphics.printf(self.text, self.x + (self.XTween or 0), self.y+(self.height-self.Font:getHeight())/2, self.width, "right",self.TextRotaion)
+			else
+				love.graphics.setColor(self.TextColor[1],self.TextColor[2],self.TextColor[3],self.TextVisibility)
+				love.graphics.setFont(self.Font)
+				love.graphics.printf(self.text, self.x + (self.XTween or 0), self.y, self.width, self.TextFormat,self.TextRotaion)
 			end
 		end
 		if self.DrawRulesE then

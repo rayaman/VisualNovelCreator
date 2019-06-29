@@ -59,7 +59,7 @@ end
 function gui:canPress()
 	local ref = self
 	if self.ClipReference then ref = self.ClipReference end
-	if self.Visible==true and self:parentVisible() and not(self:isBeingCovering()) then
+	if self.Active and self.Visible==true and self:parentVisible() and not(self:isBeingCovering()) then
 		local x,y = love.mouse.getX(),love.mouse.getY()
 		if (x > ref.x and x < ref.x+ref.width and y > ref.y and y < ref.y+ref.height) and (x > self.x and x < self.x+self.width and y > self.y and y < self.y+self.height and self:Clickable() and (self:eventable() or self:touchable())) then
 			return true
