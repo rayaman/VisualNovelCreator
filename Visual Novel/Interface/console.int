@@ -1,0 +1,40 @@
+function gui:newConsole(x,y,w,h)
+	local c=self:newTextLabel("Console","Console",x,y,w,20,sx,sy,sw)
+	c.dragbut="l"
+	c.Draggable=true
+	c.Tween=-3
+	c.BG=c:newTextLabel("","",0,20,0,h,0,0,1,1)
+	c.BG.ClipDescendants=true
+	c.output=c.BG:newTextLabel("","",0,0,0,0,0,0,1,1)
+	c.output.Visibility=0
+	c.scroll=c.BG:newScrollBar()
+	c.scroll.output=c.output
+	c.output.Tween=-3
+	c.output.TextColor=Color.sexy_purple
+	c.input=c:newTextBox("> ","> ",0,h+20,-20,20,0,0,1)
+	c.input.Tween=-3
+	c.input.TextFormat="left"
+	c.output.TextFormat="left"
+	c.output.count=0
+	c:ApplyGradient({Color.Red,Color.Darken(Color.Red,.25)})
+	c.BG:ApplyGradient({Color.Black,Color.Lighten(Color.Black,.15)})
+	c.input:ApplyGradient({Color.Gray,Color.Darken(Color.Gray,.25)})
+	c.scroll:OnScroll(function(self,pos)
+		self.output:SetDualDim(0,0,0,0,0,-((pos/(h*8))*self.output.count))
+	end)
+	c.input:OnEnter(function(self,text)
+		self.Parent.output.text=self.Parent.output.text..text.."\n"
+		self.text="> "
+		self.Parent.output.count=self.Parent.output.count+1
+	end)
+	c.input:OnFocus(function(self)
+		self.text="> "
+	end)
+	function c:showConsole()
+		self.Parent.Visible=true
+	end
+	function c:hideConsole()
+		self.Parent.Visible=false
+	end
+	return c
+end

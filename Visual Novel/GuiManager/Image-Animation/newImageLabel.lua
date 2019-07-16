@@ -6,5 +6,6 @@ function gui:newImageLabel(i,name, x, y, w, h, sx ,sy ,sw ,sh)
 	c.Visibility=0
 	c.ImageVisibility=1
 	c.rotation=0
+	c.BorderSize = 0
 	return c
 end

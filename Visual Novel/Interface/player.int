@@ -1,0 +1,20 @@
+function gui:newPlayer(source,x,y,w,h,sx,sy,sw,sh)
+	local c=self:newFrame("MediaPlayer",x,y,w,h,sx,sy,sw,sh)
+	c.visuals=c:newFrame(0,0,0,-20,0,0,1,1)
+	c.bar=c:newFrame(40,-20,-40,20,0,1,1)
+	c.bar:ApplyGradient{Color.blue,Color.Darken(Color.blue,.25)}
+	c.action=c:newTextButton("Play",0,-20,40,20,0,1)
+	c.action:ApplyGradient{Color.blue,Color.Darken(Color.blue,.25)}
+	c.action:OnReleased(function(b,self)
+		if self.text=="Play" then
+			self.Parent.Source:play()
+			self.text="Pause"
+		else
+			self.Parent.Source:pause()
+			self.text="Play"
+		end
+	end)
+	c.action.Tween=-3
+	c.VPush=multi:newStep(0,1,1,10)
+	c.Source=audio:new(source)
+end

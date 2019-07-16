@@ -36,12 +36,12 @@ new=function(r,b,g)
 		__unm = function (c1)
 			return Color.new(-c1[1],-c1[2],-c1[2])
 		end,
-		__tostring = function(c)
-			return "("..c[1]..","..c[2]..","..c[3]..")"
-		end,
 		__eq = Color.EQ,
 		__lt = Color.LT,
 		__le = Color.LE,
+		__tostring = function(self)
+			return "("..self[1] ..","..self[1] ..","..self[1] ..")"
+		end
 	}
 	local temp = {r/255,b/255,g/255,1}
 	setmetatable(temp, mt)
@@ -63,23 +63,27 @@ IndexColor=function(name,r,b,g)
 	if type(r)=="string" then
 		r,b,g=tonumber(string.sub(r,1,2),16),tonumber(string.sub(r,3,4),16),tonumber(string.sub(r,5,6),16)
 	end
-	Color[string.lower(name)]=Color.new(r,b,g)
-	Color[string.upper(name)]=Color.new(r,b,g)
-	Color[string.upper(string.sub(name,1,1))..string.lower(string.sub(name,2))]=Color.new(r,b,g)
+	_Color[string.lower(name)]=Color.new(r,b,g)
+	_Color[string.upper(name)]=Color.new(r,b,g)
+	_Color[string.upper(string.sub(name,1,1))..string.lower(string.sub(name,2))]=Color.new(r,b,g)
 end,
 Darken=function(color,v)
-	currentR=color[1]
-	currentG=color[2]
-	currentB=color[3]
-	return Color.new((currentR*255) * (1 - v),(currentG*255) * (1 - v),(currentB*255) * (1 - v))
+	return Color.new((color[1]*255) * (1 - v),(color[2]*255) * (1 - v),(color[3]*255) * (1 - v))
 end,
 Lighten=function(color,v)
 	currentR=color[1]
 	currentG=color[2]
 	currentB=color[3]
-	return Color.new(currentR*255 + (255 - (currentR*255)) * v,currentG*255 + (255 - (currentG*255)) * v,currentB*255 + (255 - (currentB*255)) * v)
+	return Color.new(color[1]*255 + (255 - (color[1]*255)) * v,color[2]*255 + (255 - (color[2]*255)) * v,color[3]*255 + (255 - (color[3]*255)) * v)
 end
 }
+_Color = {}
+setmetatable(Color,{
+	__index = function(self,k)
+		local c = _Color[k]
+		return Color.new(c[1]*255,c[2]*255,c[3]*255)
+	end,
+})
 Color.IndexColor("Black",20,20,20)
 Color.IndexColor("WHITE",255,255,255)
 Color.IndexColor("MAROON",128,20,20)

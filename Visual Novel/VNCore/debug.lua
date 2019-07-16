@@ -12,9 +12,13 @@ vncore.getWorkspace().Active = false
 vncore.getWorkspace().Visibility = 1
 -- debugF.Visible = false
 local taskmanager = debugF:newFrame("TaskManager",0,0,400,500,0,0)
+taskmanager:enableDragging(true)
 taskmanager.scroll = taskmanager:newFrame("ScrollBwar",-20,30,20,-60,1,0,0,1)
 taskmanager.scroll.mover = taskmanager.scroll:newFrame("Mover",0,0,20,20)
 taskmanager.scroll.mover.Color = Color.Lighten(Color.Saddle_brown,.25)
+taskmanager.Data = taskmanager:newTextLabel("","",0,30,-20,-60,0,0,1,1)
+taskmanager.Data.TextFormat = "left"
+taskmanager.Data.Color = Color.light_blue
 local lock = false
 taskmanager.scroll.mover:OnPressed(function(b,self)
     lock = true
@@ -27,7 +31,6 @@ taskmanager.scroll:OnClicked(function(b,self,x,y)
         love.mouse.setX(self.x+10)
     end
     taskmanager.scroll.mover:SetDualDim(nil,y-10)
-    print(taskmanager.scroll.mover.offset.pos.y)
     if taskmanager.scroll.mover.offset.pos.y <= 0 then
         taskmanager.scroll.mover:SetDualDim(nil,0)
     elseif taskmanager.scroll.mover.offset.pos.y >= taskmanager.scroll.height-20 then
@@ -81,8 +84,10 @@ multi:newThread("DebugHandler",function()
             return debugF.Visible -- If the debug frame is not in view dont bother process any debug info
         end)
         thread.sleep(.1)
-        taskmanagerDetails = multi:getTasksDetails("t")
         debugF:TopStack()
+        if taskmanager.Visible then
+            taskmanager.Data.text = multi:getTasksDetails()
+        end
     end
 end)
 return debug

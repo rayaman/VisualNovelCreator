@@ -1,0 +1,128 @@
+function gui:newHeader()
+	local header=self:newFrame(0,0,0,20,0,0,1)
+	header:ApplyGradient({Color.new(70,70,70),Color.Darken(Color.new(70,70,70),.25),trans=200})
+	header.last={x=0,width=0}
+	function header:newTab(name)
+		local font=love.graphics.getFont()
+		local tab=self:newTextLabel(name,self.last.x+self.last.width,0,font:getWidth(name)/2+10,20)
+		tab.TextColor = Color.new(200,200,200)
+		self.last=tab
+		tab.Visibility=0
+		tab.Tween=4
+		tab.XTween=-2
+		tab.Color=Color.Gray
+		tab.largest={x=0,width=0}
+		tab.Options=tab:newFrame("Options",0,20)
+		tab.Options.Visible=false
+		tab.Options.Color=Color.new(90,90,90)
+		tab:OnEnter(function(self)
+			self.Visibility=.5
+			local c = self.Parent.Children
+			local count = 0
+			for i = 1,#c do
+				if c[i].Options then
+					if c[i].Options.Visible then
+						count = count + 1
+					end
+				end
+			end
+			if count ~= 0 and self.Options.Visible == false then
+				for i = 1,#c do
+					c[i].Options.Visible = false
+					c[i].Visibility = 0
+				end
+				self.Visibility=.5
+				self.Options.Visible = true
+			end
+		end)
+		tab:OnExit(function(self)
+			self.Visibility=0
+		end)
+		tab:OnReleased(function(b,self)
+			if b=="l" then
+				self.Options.Visible=true
+				-- header:addDominance()
+			end
+		end)
+		tab:OnReleasedOuter(function(self)
+			self.Options.Visible=false
+			-- header:removeDominance()
+		end)
+		function tab:newOption(name,func,HK,disp)
+			local opt=self.Options:newTextLabel(name,0,#self.Options:getChildren()*20,0,20,0,0,1)
+			if HK then
+				if type(HK)=="table" then
+					for i=1,#HK do
+						opt:addHotKey(HK[i],func)
+					end
+					if disp then
+						HK[1]=disp
+					end
+					name=name.."\t"
+					local temp=opt:newTextLabel(HK[1],-(font:getWidth(HK[1])/2+2),0,font:getWidth(HK[1])/2+2,20,1)
+					temp.Visibility=0
+					temp.Tween=4
+					temp.XTween=-4
+					temp.Color = Color.new(50,50,50)
+					opt.text=name
+				else
+					opt:setHotKey(HK,func)
+					if disp then
+						HK=disp
+					end
+					name=name.."\t"
+					local temp=opt:newTextLabel(HK,-(font:getWidth(HK)/2+2),0,font:getWidth(HK)/2+2,20,1)
+					temp.Visibility=0
+					temp.Tween=4
+					temp.XTween=-4
+					temp.Color = Color.new(50,50,50)
+					opt.text=name
+				end
+			end
+			opt.TextFormat="left"
+			opt.Visibility=0
+			opt.Color=Color.new(50,50,50)
+			opt.Tween=4
+			opt:OnEnter(function(self)
+				self.Visibility=.5
+			end)
+			opt:OnExit(function(self)
+				self.Visibility=0
+			end)
+			local font=love.graphics.getFont()
+			local c=self:getChildren()
+			if font:getWidth(name)+6>self.largest.width then
+				self.largest={width=font:getWidth(name)+6}
+			end
+			self.Options:SetDualDim(0,20,self.largest.width,#self.Options:getChildren()*20)
+			if func then
+				opt:OnReleased(function()
+					func(self.Options)
+				end)
+			end
+			return opt
+		end
+		return tab
+	end
+	function header:newIconBar()
+		local c
+		if self.iconbar then
+			c = self.iconbar:newFrame("Icons",0,0,0,30,0,1,1)
+		else
+			c = self:newFrame("Icons",0,0,0,30,0,1,1)
+		end
+		self.iconbar = c
+		function c:addIcon(path)
+			local i
+			if self.lasticon then
+				i = self.lasticon:newImageButton(path,"",10,0,16,16,1)
+			else
+				i = self:newImageButton(path,"",10,7,16,16)
+			end
+			self.lasticon = i
+			return i
+		end
+		return c
+	end
+	return header
+end

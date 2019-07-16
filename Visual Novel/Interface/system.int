@@ -1,0 +1,64 @@
+function gui:addTip(tip,n)
+	local link = self
+	local t=gui:newTextLabel(tip,"Tooltip")
+	t.allowOverlapping = true
+	self.allowOverlapping = true
+	t:SetDualDim(0,0,t.Font:getWidth(tip)+8,14)
+	t.Visible=false
+	t.XTween=-2
+	t.Color=Color.tan
+	local alarm = multi:newAlarm(0)
+	alarm:Pause()
+	alarm.parent=self
+	t.time=n or 2
+	alarm:OnRing(function(alarm)
+		if link:canPress() then
+			t:SetDualDim(love.mouse.getX()-2,love.mouse.getY()-2)
+			t.Visible=true
+		end
+	end)
+	self:OnEnter(function()
+		link.Visibility=.5
+		alarm:Reset(t.time)
+	end)
+	self:OnExit(function()
+		alarm:Reset(t.time)
+		alarm:Pause()
+		link.Visibility = 0
+		t.Visible = false
+	end)
+end
+local wincount = 0
+function gui:newWindow(name)
+	local win=self:newFrame(0+(wincount*25),0+(wincount*25),400,20)
+	wincount=wincount+1
+	win:enableDragging(true)
+	win.dragbut="l"
+	if name then
+		local font=love.graphics.getFont()
+		win.title=win:newTextLabel(name,0,0,font:getWidth(name),20)
+		win.title.TextFormat="left"
+		win.title.Visibility=0
+		win.title.XTween=3
+		win.title.Tween=3
+	end
+	win:ApplyGradient({Color.new(70,70,70),Color.Darken(Color.new(70,70,70),.25),trans=200})
+	win.close=win:newImageButton("icons/cancel.png",-20,2,16,16,1)
+	local click = false
+	win:OnClicked(function(b,self)
+		if not click then
+			self:TopStack()
+			click = true
+		end
+	end)
+	win:OnReleased(function(b,self)
+		click = false
+	end)
+	win.close:OnReleased(function(b,self)
+		self.Parent:Destroy()
+		love.mouse.setCursor()
+	end)
+	win.holder=win:newFrame(0,0,0,280,0,1,1)
+	win.holder.Color = Color.new(25,25,25)
+	return win.holder,win
+end

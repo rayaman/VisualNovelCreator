@@ -45,7 +45,7 @@ function gui:Clickable()
 	local x,y,w,h=love.graphics.getScissor()
 	local mx=love.mouse.getX()
 	local my=love.mouse.getY()
-	if _GuiPro.	HasStencel then
+	if _GuiPro.HasStencel then
 		local obj=_GuiPro.StencelHolder
 		if self:isDescendant(obj) then
 			return math.sqrt((mx-obj.x)^2+(my-obj.y)^2)<=(obj.offset.size.x or 0)
@@ -54,7 +54,10 @@ function gui:Clickable()
 	if not(x) then
 		return true
 	end
-	return not(mx>x+w or mx<x or my>y+h or my<y)
+	if self.isclipped then
+		return not(mx>x+w or mx<x or my>y+h or my<y)
+	end
+	return true
 end
 function gui:canPress()
 	local ref = self
