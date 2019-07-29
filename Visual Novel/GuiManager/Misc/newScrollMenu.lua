@@ -11,31 +11,27 @@ function gui:newScrollMenu(name,SC,MC)
 	temp.scroll = ScrollY
 	local cc = self.Color
 	local c1,c2=Color.new(cc[1]*255,cc[2]*255,cc[3]*255),Color.new(cc[1]*255+20,cc[2]*255+20,cc[3]*255+20)
-	print(cc[1]-20,cc[2]-20,cc[3]-20)
 	ScrollY.Color=SC or c1
 	ScrollY.allowOverlapping = true
 	ScrollY.Mover = ScrollY:newFrame(name.."MoverY",5,5,10,80)
 	ScrollY.Mover.Color = MC or c2
 	local func = function(b,self,x,y,nn)
-		temp.symbolicY = y
 		if y>45 and y<self.height-45 then
 			self.Mover:SetDualDim(nil,y-40)
 			temp.first:setDualDim(nil,nil,nil,nil,nil,-((y-46)/(self.height-92))*((temp.max-temp.height+60)/temp.height))
 			if not nn then
 				self:setMouseXY(10)
 			end
+		elseif y<5 then
+			self.Mover:SetDualDim(nil,5)
+			temp.first:setDualDim(nil,nil,nil,nil,nil,0)
 		end
 	end
 	ScrollY:OnClicked(func)
 	temp.symbolicY = 45
 	temp.scrollM = 2
 	temp:OnMouseWheelMoved(function(self,x,y)
-		temp.symbolicY=temp.symbolicY-(y*temp.scrollM)
-		if temp.symbolicY<45 then
-			temp.symbolicY = 45
-		elseif temp.symbolicY>ScrollY.height-40 then
-			temp.symbolicY = ScrollY.height-40
-		end
+		temp.symbolicY=temp.symbolicY-(y*#temp.list)
 		func("l",ScrollY,x,temp.symbolicY,true)
 	end)
 	temp.ClipDescendants=true

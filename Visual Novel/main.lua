@@ -6,112 +6,130 @@ require("GuiManager")
 require("parseManager")
 --VNCore = require("VNCore").init(gui:newFullFrame("Main"), parseManager, multi)
 --debug = require("VNCore.debug")
-local TM_Count = 0
-function gui:newTabMenu(x,y,w,h,sx,sy,sw,sh)
-	TM_Count = TM_Count + 1
-	local c = self:newFrame("TabMenu_"..TM_Count,x,y,w,h,sx,sy,sw,sh)
-	c.Id = TM_Count
-	c.tabs = {}
-	c.frames = {}
-	c.tabheight = 30
-	function c:setTabHeight(n)
-		self.tabheight = n or 30
-	end
-	function c:updateTabs()
-		local n = #self.tabs
-		for i = 1,#self.tabs do
-			self.tabs[i]:SetDualDim(0,0,0,self.tabheight,(i-1)/n,0,1/n)
-			multi.nextStep(function()
-				self.tabs[i]:fitFont()
-			end)
-		end
-	end
-	function c:addTab(name,c1,c2)
-		local bnt = self:newTextLabel(name,name,0,0,0,self.tabheight)
-		local frame = self:newFrame(name,0,self.tabheight,0,-self.tabheight,0,0,1,1)
-		bnt.Frame = frame
-		if c1 then
-			bnt.Color = c1
-			frame.Color = c1
-		end
-		if c2 then
-			frame.Color = c2
-		end
-		table.insert(self.tabs,bnt)
-		table.insert(self.frames,frame)
-		self:updateTabs()
-		bnt:OnReleased(function(b,self)
-			for i = 1,#c.frames do
-				c.frames[i].Visible = false
-			end
-			self.Frame.Visible = true
-		end)
-		return frame,bnt
-	end
-	function c:removeTab(name)
 
-	end
-	return c
-end
-local wincount = 0
-function gui:newWindow(name)
-	local win=self:newFrame(0+(wincount*25),0+(wincount*25),400,20)
-	wincount=wincount+1
-	win:enableDragging(true)
-	win.dragbut="l"
-	if name then
-		local font=love.graphics.getFont()
-		win.title=win:newTextLabel(name,0,0,font:getWidth(name),20)
-		win.title.TextFormat="left"
-		win.title.Visibility=0
-		win.title.XTween=3
-		win.title.Tween=3
-	end
-	win:ApplyGradient({Color.new(70,70,70),Color.Darken(Color.new(70,70,70),.25),trans=200})
-	win.close=win:newImageButton("GuiManager/icons/cancel.png",-20,2,16,16,1)
-	local click = false
-	win:OnClicked(function(b,self)
-		if not click then
-			self:TopStack()
-			click = true
-		end
-	end)
-	win:OnReleased(function(b,self)
-		click = false
-	end)
-	win.close:OnReleased(function(b,self)
-		self.Parent:Destroy()
-		love.mouse.setCursor()
-	end)
-	win.holder=win:newFrame(0,0,0,280,0,1,1)
-	win.holder.Color = Color.new(25,25,25)
-	return win.holder,win
-end
-win = gui:newWindow("Taskmanager")
-test = win:newTabMenu(0,0,400,500)
+win = gui:newWindow("Taskmanager",500,20)
+test = win:newTabMenu(0,0,500,600)
 test:setTabHeight(30)
-f,b = test:addTab("Tasks",Color.new(60,60,60), Color.new(80,80,80))
-f,b = test:addTab("Threads",Color.new(60,60,60), Color.new(80,80,80))
-f,b = test:addTab("SThreads",Color.new(60,60,60), Color.new(80,80,80))
-f,b = test:addTab("Details",Color.new(60,60,60), Color.new(80,80,80))
-local temp = f:newScrollMenu("System Threads")
-temp:setRef{
-	[[fitFont()]],
-}
-local f
-for i=1,20 do
-	hmm=temp:addItem("Item "..i, math.random(30,60), 5)
-	hmm:OnReleased(function(b,self)
-		print(self.text)
-	end)
-	if i == 1 then
-		f = hmm
+local tasks, tasks_b = test:addTab("Tasks",Color.new(60,60,60), Color.new(80,80,80))
+threads,threads_b = test:addTab("Threads",Color.new(60,60,60), Color.new(80,80,80))
+sthreads,sthreads_b = test:addTab("SThreads",Color.new(60,60,60), Color.new(80,80,80))
+details,details_b = test:addTab("Details",Color.new(60,60,60), Color.new(80,80,80))
+local ST_Menu = sthreads:newScrollMenu("System Threads")
+local T_Menu = threads:newScrollMenu("Threads")
+local TASKS_Menu = tasks:newScrollMenu("Tasks")
+--local DETAILS_Menu -- We need to manage this one a bit differently
+refFrame = gui:newFrame("Reference Object"):asRef() -- Makes cloning an object seamless, since we set this as an object we expect to be cloned
+refFrame.ItemName = refFrame:newTextLabel("Item Name","Item Name",5,3,0,19)
+refFrame.ItemName:widthToTextSize()
+refFrame.ItemPR = refFrame.ItemName:newTextLabel("Running","Running",5,0,0,0,1,0,0,1) -- Doubles as Resume thread as well
+refFrame.ItemPR:widthToTextSize()
+refFrame.ItemKill = refFrame.ItemPR:newTextLabel("Kill","Kill",5,0,0,0,1,0,0,1) -- Doubles as Resume thread as well
+refFrame.ItemKill:widthToTextSize()
+refFrame.ItemUpTime = refFrame.ItemKill:newTextLabel("Uptime","Uptime",5,0,0,0,1,0,0,1) -- Doubles as Resume thread as well
+refFrame.ItemUpTime:widthToTextSize()
+local function pr(b,self)
+	if self.GLink:isPaused() then
+		self.text = "Running"
+		self:widthToTextSize()
+		self.GLink:Resume()
+	else
+		self.text = "Paused"
+		self:widthToTextSize()
+		self.GLink:Pause()
 	end
 end
-temp:removeItem(f)
-function love.update()
-	multi:uManager()
+local function kill(b,self)
+	self.GLink:Destroy()
 end
+--temp:setRef{
+--	[[fitFont()]],
+--}
+
+	--ST_Menu:addItem("System Threads "..i, 25, 1,refFrame:clone())
+	--T_Menu:addItem("Threads "..i, 25, 1,refFrame:clone())
+	--
+local listref = {
+	["ProcessName"] = true,
+	["CyclesPerSecondPerTask"] = true,
+	["MemoryUsage"] = true,
+	["ThreadCount"] = true,
+	["SystemLoad"] = true,
+	["PriorityScheme"] = true,
+	["SystemThreadCount"] = true,
+	_Tasks = {},
+	_Threads = {},
+	_SystemThreads = {},
+}
+function table.sync(a,b)
+	for i,v in pairs(b) do
+		if a[i] then
+			a[i] = v
+		end
+	end
+end
+multi:newThread("Updater",function()
+	while true do
+		local taskslist = multi:getTasksDetails("t")
+		table.sync(listref,taskslist) -- Managing details
+		thread.sleep(.1)
+		for i=1,#taskslist.Tasks do
+			if not listref._Tasks[taskslist.Tasks[i].TID] then
+				local ref = TASKS_Menu:addItem("Tasks "..i, 25, 1,refFrame:clone())
+				ref.GLink = taskslist.Tasks[i].Link
+				ref.ItemKill:OnReleased(kill)
+				ref.ItemKill.GLink = ref.GLink
+				ref.ItemPR:OnReleased(pr)
+				ref.ItemPR.GLink = ref.GLink
+				listref._Tasks[taskslist.Tasks[i].TID] = {ref,taskslist.Tasks[i].Link}
+				ref.ItemName.text = taskslist.Tasks[i].Name
+				ref.ItemName:widthToTextSize()
+				ref.ItemUpTime.text = "Uptime: "..taskslist.Tasks[i].Uptime
+				ref.ItemUpTime:widthToTextSize()
+			elseif listref._Tasks[taskslist.Tasks[i].TID] then
+				-- Update whats already there
+				listref._Tasks[taskslist.Tasks[i].TID][1].ItemUpTime.text = taskslist.Tasks[i].Priority.." | "..taskslist.Tasks[i].Type.." | "..taskslist.Tasks[i].Uptime
+				listref._Tasks[taskslist.Tasks[i].TID][1].ItemUpTime:widthToTextSize()
+			end
+		end
+		for i,v in pairs(listref._Tasks) do
+			if v[2].Destroyed then
+				TASKS_Menu:removeItem(v[1])
+				listref._Tasks[i] = nil
+			end
+		end
+		for i=1,#taskslist.Threads do
+			if not listref._Threads[taskslist.Threads[i].TID] then
+				local ref = T_Menu:addItem("Tasks "..i, 25, 1,refFrame:clone())
+				ref.GLink = taskslist.Threads[i].Link
+				ref.ItemKill:OnReleased(kill)
+				ref.ItemKill.GLink = ref.GLink
+				ref.ItemPR:OnReleased(pr)
+				ref.ItemPR.GLink = ref.GLink
+				listref._Threads[taskslist.Threads[i].TID] = {ref,taskslist.Threads[i].Link}
+				ref.ItemName.text = taskslist.Threads[i].Name
+				ref.ItemName:widthToTextSize()
+				ref.ItemUpTime.text = "Uptime: "..taskslist.Threads[i].Uptime
+				ref.ItemUpTime:widthToTextSize()
+			elseif listref._Threads[taskslist.Threads[i].TID] then
+				if taskslist.Tasks[i] then
+					listref._Threads[taskslist.Threads[i].TID][1].ItemUpTime.text = "Uptime: "..taskslist.Tasks[i].Uptime
+					listref._Threads[taskslist.Threads[i].TID][1].ItemUpTime:widthToTextSize()
+				end
+			end
+		end
+		for i,v in pairs(listref._Tasks) do
+			if v[2].Destroyed then
+				TASKS_Menu:removeItem(v[1])
+				listref._Tasks[i] = nil
+			end
+		end
+	end
+end)
+settings = {protect = true,priority = 2}
+function love.update()
+	multi:uManager(settings)
+end
+
 multi.OnError(function(...)
 	print(...)
 end)

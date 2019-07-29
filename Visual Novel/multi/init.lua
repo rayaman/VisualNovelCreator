@@ -24,8 +24,8 @@ SOFTWARE.
 local bin = pcall(require,"bin")
 local multi = {}
 local clock = os.clock
-multi.Version = "13.0.0"
-multi._VERSION = "13.0.0"
+multi.Version = "13.1.0"
+multi._VERSION = "13.1.0"
 multi.stage = "stable"
 multi.__index = multi
 multi.Name = "multi.root"
@@ -158,7 +158,7 @@ function multi:getLoad()
 			bench = steps
 			bb = steps
 		end)
-		while not bench do 
+		while not bench do
 			multi:uManager()
 		end
 		bench = bench^1.5
@@ -342,7 +342,17 @@ function multi:getTasksDetails(t)
 				name = " <"..name..">"
 			end
 			count = count + 1
-			table.insert(str,{v.Type:sub(1,1):upper()..v.Type:sub(2,-1)..name,multi.Round(os.clock()-v.creationTime,3),self.PriorityResolve[v.Priority],i})
+			table.insert(str,{v.Type:sub(1,1):upper()..v.Type:sub(2,-1)..name,multi.Round(os.clock()-v.creationTime,3),self.PriorityResolve[v.Priority],v.TID})
+		end
+		for v,i in pairs(multi.PausedObjects) do
+			if v.Type~="event" then
+				local name = v.Name or ""
+				if name~="" then
+					name = " <"..name..">"
+				end
+				count = count + 1
+				table.insert(str,{v.Type:sub(1,1):upper()..v.Type:sub(2,-1)..name,multi.Round(os.clock()-v.creationTime,3),self.PriorityResolve[v.Priority],v.TID})
+			end
 		end
 		if count == 0 then
 			table.insert(str,{"Currently no processes running!","","",""})
@@ -355,7 +365,7 @@ function multi:getTasksDetails(t)
 				dat2 = dat2.."<SystemThread: "..multi.SystemThreads[i].Name.." | "..os.clock()-multi.SystemThreads[i].creationTime..">\n"
 			end
 		end
-		local load,steps = multi:getLoad()
+		local load, steps = multi:getLoad()
 		if multi.scheduler then
 			for i=1,#multi.scheduler.Threads do
 				dat = dat .. "<THREAD: "..multi.scheduler.Threads[i].Name.." | "..os.clock()-multi.scheduler.Threads[i].creationTime..">\n"
@@ -369,22 +379,30 @@ function multi:getTasksDetails(t)
 		str = {
 			ProcessName = (self.Name or "Unnamed"),
 			ThreadCount = #multi.scheduler.Threads,
-			MemoryUsage = math.ceil(collectgarbage("count")).." KB",
+			MemoryUsage = math.ceil(collectgarbage("count")),
 			PriorityScheme = priorityTable[multi.defaultSettings.priority or 0],
 			SystemLoad = multi.Round(load,2),
 			CyclesPerSecondPerTask = steps,
+			SystemThreadCount = multi.SystemThreads and #multi.SystemThreads or 0
 		}
-		str.threads = {}
-		str.systemthreads = {}
+		str.Tasks = {}
+		str.PausedTasks = {}
+		str.Threads = {}
+		str.Systemthreads = {}
 		for i,v in pairs(self.Mainloop) do
-			str[#str+1]={Type=v.Type,Name=v.Name,Uptime=os.clock()-v.creationTime,Priority=self.PriorityResolve[v.Priority],TID = i}
+			table.insert(str.Tasks,{Link = v, Type=v.Type,Name=v.Name,Uptime=os.clock()-v.creationTime,Priority=self.PriorityResolve[v.Priority],TID = v.TID})
+		end
+		for v,i in pairs(multi.PausedObjects) do
+			if v.Type~="event" then
+				table.insert(str.Tasks,{Link = v, Type=v.Type,Name=v.Name,Uptime=os.clock()-v.creationTime,Priority=self.PriorityResolve[v.Priority],TID = v.TID})
+			end
 		end
 		for i=1,#multi.scheduler.Threads do
-			str.threads[multi.scheduler.Threads[i].Name]={Uptime = os.clock()-multi.scheduler.Threads[i].creationTime}
+			table.insert(str.Threads,{Uptime = os.clock()-multi.scheduler.Threads[i].creationTime,Name = multi.scheduler.Threads[i].Name,Link = multi.scheduler.Threads[i],TID = multi.scheduler.Threads[i].TID})
 		end
-		if multi.canSystemThread then
+		if multi.SystemThreads then
 			for i=1,#multi.SystemThreads do
-				str.systemthreads[multi.SystemThreads[i].Name]={Uptime = os.clock()-multi.SystemThreads[i].creationTime}
+				table.insert(str.Systemthreads,{Uptime = os.clock()-multi.SystemThreads[i].creationTime,Name = multi.SystemThreads[i].Name,Link = multi.SystemThreads[i],TID = multi.SystemThreads[i].count})
 			end
 		end
 		return str
@@ -528,6 +546,7 @@ function multi:OnTimerResolved(func)
 	return self
 end
 -- Timer stuff done
+multi.PausedObjects = {}
 function multi:Pause()
 	if self.Type=='mainprocess' then
 		multi.print("You cannot pause the main process. Doing so will stop all methods and freeze your program! However if you still want to use multi:_Pause()")
@@ -536,6 +555,7 @@ function multi:Pause()
 		local loop = self.Parent.Mainloop
 		for i=1,#loop do
 			if loop[i] == self then
+				multi.PausedObjects[self] = true
 				table.remove(loop,i)
 				break
 			end
@@ -553,6 +573,7 @@ function multi:Resume()
 	else
 		if self.Active==false then
 			table.insert(self.Parent.Mainloop,self)
+			multi.PausedObjects[self] = nil
 			self.Active=true
 		end
 	end
@@ -570,6 +591,7 @@ function multi:Destroy()
 			if self.Parent.Mainloop[i]==self then
 				self.Parent.OnObjectDestroyed:Fire(self)
 				table.remove(self.Parent.Mainloop,i)
+				self.Destroyed = true
 				break
 			end
 		end
@@ -594,6 +616,7 @@ function multi:setName(name)
 end
 multi.SetName = multi.setName
 --Constructors [CORE]
+local _tid = 0
 function multi:newBase(ins)
 	if not(self.Type=='mainprocess' or self.Type=='process' or self.Type=='queue') then error('Can only create an object on multi or an interface obj') return false end
 	local c = {}
@@ -607,6 +630,7 @@ function multi:newBase(ins)
 	c.funcTM={}
 	c.funcTMR={}
 	c.ender={}
+	c.TID = _tid
 	c.important={}
 	c.Act=function() end
 	c.Parent=self
@@ -617,6 +641,7 @@ function multi:newBase(ins)
 	else
 		table.insert(self.Mainloop,c)
 	end
+	_tid = _tid + 1
 	return c
 end
 function multi:newProcessor(file)
@@ -635,7 +660,7 @@ function multi:newProcessor(file)
 	c.Jobs={}
 	c.queue={}
 	c.jobUS=2
-	c.l=self:newLoop(function(self,dt) 
+	c.l=self:newLoop(function(self,dt)
 		if self.link.Active then
 			c:uManager()
 		end
@@ -740,6 +765,7 @@ function multi:newConnection(protect,func)
 	local c={}
 	c.callback = func
 	c.Parent=self
+	c.lock = false
 	setmetatable(c,{__call=function(self,...)
 		local t = ...
 		if type(t)=="table" and t.Type ~= nil then
@@ -788,8 +814,15 @@ function multi:newConnection(protect,func)
 			return self.connections[name] or self
 		end
 	end
+	function c:Lock()
+		c.lock = true
+	end
+	function c:Unlock()
+		c.lock = false
+	end
 	function c:Fire(...)
 		local ret={}
+		if self.lock then return end
 		for i=#self.func,1,-1 do
 			if self.protect then
 				local temp={pcall(self.func[i][1],...)}
@@ -822,6 +855,7 @@ function multi:newConnection(protect,func)
 			ID=self.ID,
 			Parent=self,
 			Fire=function(self,...)
+				if self.Parent.lock then return end
 --~ 				if self.Parent.FC>0 then
 --~ 					for i=1,#self.Parent.FC do
 --~ 						self.Parent.FC[i]:Fire(...)
@@ -1046,9 +1080,9 @@ function multi:newFunction(func)
 	c.func=func
 	mt={
 		__index=multi,
-		__call=function(self,...) 
-			if self.Active then 
-				return self:func(...) 
+		__call=function(self,...)
+			if self.Active then
+				return self:func(...)
 			end
 			return nil,true
 		end
@@ -1436,19 +1470,38 @@ if os.getOS()=="windows" then
 else
 	thread.__CORES=tonumber(io.popen("nproc --all"):read("*n"))
 end
+thread.requests = {}
+function thread.request(t,cmd,...)
+	thread.requests[t.thread] = {cmd,{...}}
+end
+function thread._Requests()
+	local t = thread.requests[coroutine.running()]
+	thread.requests[coroutine.running()] = nil
+	if t then
+		local cmd,args = t[1],t[2]
+		thread[cmd](unpack(args))
+	end
+end
+function thread.exec(func)
+	func()
+end
 function thread.sleep(n)
+	thread._Requests()
 	coroutine.yield({"_sleep_",n or 0})
 end
 function thread.hold(n)
+	thread._Requests()
 	return coroutine.yield({"_hold_",n or function() return true end})
 end
 function thread.skip(n)
+	thread._Requests()
 	coroutine.yield({"_skip_",n or 0})
 end
 function thread.kill()
 	coroutine.yield({"_kill_",":)"})
 end
 function thread.yeild()
+	thread._Requests()
 	coroutine.yield({"_sleep_",0})
 end
 function thread.isThread()
@@ -1469,8 +1522,8 @@ function thread.waitFor(name)
 	return thread.get(name)
 end
 function thread.testFor(name,_val,sym)
-	thread.hold(function() 
-		local val = thread.get(name)~=nil 
+	thread.hold(function()
+		local val = thread.get(name)~=nil
 		if val then
 			if sym == "==" or sym == "=" then
 				return _val==val
@@ -1496,11 +1549,17 @@ multi:setDomainName("Threads")
 multi:setDomainName("Globals")
 local initT = false
 local threadCount = 0
+local threadid = 0
 function multi:newThread(name,func)
-	local func = func
+	local func = func or name
 	if type(name) == "function" then
-		func = name
 		name = "Thread#"..threadCount
+	end
+	local g=string.dump(func)
+	if g:find("K") and not g:find("thread") then
+		print("Warning! The thread created: <"..name.."> contains a while loop which may not be confugured properly with thread.* If your code seems to hang this may be the reason!")
+	else
+		multi.print("Should be safe")
 	end
 	local c={}
 	c.ref={}
@@ -1508,9 +1567,34 @@ function multi:newThread(name,func)
 	c.thread=coroutine.create(func)
 	c.sleep=1
 	c.Type="thread"
+	c.TID = threadid
 	c.firstRunDone=false
 	c.timer=multi:newTimer()
 	c.ref.Globals=self:linkDomain("Globals")
+	c._isPaused = false
+	function c:isPaused()
+		return self._isPaused
+	end
+	local resumed = false
+	function c:Pause()
+		if not self._isPaused then
+			thread.request(self,"exec",function()
+				thread.hold(function()
+					return resumed
+				end)
+				resumed = false
+				self._isPaused = false
+			end)
+			self._isPaused = true
+		end
+	end
+	function c:Resume()
+		resumed = true
+	end
+	function c:Kill()
+		thread.request(self,"kill")
+	end
+	c.Destroy = c.Kill
 	function c.ref:send(name,val)
 		ret=coroutine.yield({Name=name,Value=val})
 		self:syncGlobals(ret)
@@ -1544,6 +1628,8 @@ function multi:newThread(name,func)
 		multi.initThreads()
 	end
 	c.creationTime = os.clock()
+	threadid = threadid + 1
+	return c
 end
 function multi.initThreads()
 	initT = true
@@ -1553,11 +1639,29 @@ function multi.initThreads()
 		self.skip=tonumber(n) or 24
 	end
 	multi.scheduler.skip=0
-	multi.scheduler.counter=0
 	multi.scheduler.Threads=multi:linkDomain("Threads")
 	multi.scheduler.Globals=multi:linkDomain("Globals")
+	local holds = {}
+	local skips = {}
+	local t0,t1,t2,t3,t4,t5,t6
 	multi.scheduler:OnLoop(function(self)
-		self.counter=self.counter+1
+		for i=#skips,1,-1 do
+			skips[i].pos = skips[i].pos + 1
+			if skips[i].count==skips[i].pos then
+				skips[i].Link.sleep=0
+				skips[i]=nil
+			end
+		end
+		for i=#holds,1,-1 do
+			if holds[i] then
+				t0,t1,t2,t3,t4,t5,t6 = holds[i].func()
+				if t0 then
+					holds[i].Link.sleep = 0
+					holds[i].Link.returns = {t0,t1,t2,t3,t4,t5,t6}
+					holds[i]=nil
+				end
+			end
+		end
 		for i=#self.Threads,1,-1 do
 			ret={}
 			if coroutine.status(self.Threads[i].thread)=="dead" then
@@ -1596,26 +1700,18 @@ function multi.initThreads()
 					elseif ret[1]=="_skip_" then
 						self.Threads[i].timer:Reset()
 						self.Threads[i].sleep=math.huge
-						local event=multi:newEvent(function(evnt) return multi.scheduler.counter>=evnt.counter end)
-						event.link=self.Threads[i]
-						event.counter=self.counter+ret[2]
-						event:OnEvent(function(evnt)
-							evnt.link.sleep=0
-							evnt:Destroy()
-						end):setName("multi.thread.skip")
+						table.insert(skips,{
+							Link = self.Threads[i],
+							count = ret[2],
+							pos = 0,
+						})
 					elseif ret[1]=="_hold_" then
 						self.Threads[i].timer:Reset()
 						self.Threads[i].sleep=math.huge
-						local event=multi:newEvent(ret[2])
-						event.returns = nil
-						event.link=self.Threads[i]
-						event:OnEvent(function(evnt)
-							evnt.link.sleep=0
-							evnt.link.returns = evnt.returns
-							multi.nextStep(function()
-								evnt:Destroy()
-							end)
-						end):setName("multi.thread.hold")
+						table.insert(holds,{
+							Link = self.Threads[i],
+							func = ret[2]
+						})
 					elseif ret.Name then
 						self.Globals[ret.Name]=ret.Value
 					end
